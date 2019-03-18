@@ -3,6 +3,8 @@ using CoffeeSlotMachine.Core.Entities;
 using CoffeeSlotMachine.Persistence;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace CoffeeSlotMachine.Core.Logic
 {
@@ -32,7 +34,7 @@ namespace CoffeeSlotMachine.Core.Logic
         /// <returns></returns>
         public IEnumerable<Product> GetProducts()
         {
-            throw new NotImplementedException();
+            return _dbContext.Products.OrderBy(n => n.Name);
         }
 
         /// <summary>
@@ -41,7 +43,7 @@ namespace CoffeeSlotMachine.Core.Logic
         /// <param name="product"></param>
         public Order OrderCoffee(Product product)
         {
-            throw new NotImplementedException();
+            return new Order { Product = product, Time = DateTime.Now };
         }
 
         /// <summary>
@@ -52,7 +54,15 @@ namespace CoffeeSlotMachine.Core.Logic
         /// <returns>true, wenn die Bestellung abgeschlossen ist</returns>
         public bool InsertCoin(Order order, int coinValue)
         {
-            throw new NotImplementedException();
+            if(order.InsertCoin(coinValue))
+            {
+                order.FinishPayment(GetCoinDepot());
+                order.Product.Orders.Add(order);
+                //_dbContext.Add(order);
+                _dbContext.SaveChanges();
+                return true;
+            }
+            return false;
         }
 
         /// <summary>
@@ -61,7 +71,7 @@ namespace CoffeeSlotMachine.Core.Logic
         /// <returns></returns>
         public IEnumerable<Coin> GetCoinDepot()
         {
-            throw new NotImplementedException();
+            return _dbContext.Coins.OrderByDescending(c => c.CoinValue);
         }
 
 
@@ -71,7 +81,20 @@ namespace CoffeeSlotMachine.Core.Logic
         /// <returns></returns>
         public string GetCoinDepotString()
         {
-            throw new NotImplementedException();
+            StringBuilder coinDebot = new StringBuilder();
+            
+            foreach (Coin coin in GetCoinDepot())
+            {
+                if(coinDebot.Length == 0)
+                {
+                    coinDebot.Append($"{coin.Amount}*{coin.CoinValue}");
+                }
+                else
+                {
+                    coinDebot.Append($" + {coin.Amount}*{coin.CoinValue}");
+                }
+            }
+            return coinDebot.ToString();
         }
 
         /// <summary>
@@ -80,7 +103,7 @@ namespace CoffeeSlotMachine.Core.Logic
         /// <returns></returns>
         public IEnumerable<Order> GetAllOrdersWithProduct()
         {
-            throw new NotImplementedException();
+            return _dbContext.Orders;
         }
 
         /// <summary>

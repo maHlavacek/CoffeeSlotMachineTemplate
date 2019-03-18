@@ -1,6 +1,9 @@
 ﻿using System;
+
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
 
 namespace CoffeeSlotMachine.Core.Entities
 {
@@ -10,6 +13,7 @@ namespace CoffeeSlotMachine.Core.Entities
     /// </summary>
     public class Order : EntityObject
     {
+
         /// <summary>
         /// Datum und Uhrzeit der Bestellung
         /// </summary>
@@ -29,12 +33,12 @@ namespace CoffeeSlotMachine.Core.Entities
         /// <summary>
         /// Summe der eingeworfenen Cents.
         /// </summary>
-        public int ThrownInCents => -1;
+        public int ThrownInCents => string.IsNullOrEmpty(ThrownInCoinValues)?0:ThrownInCoinValues.Split(';').Select(s => int.Parse(s)).Sum();
 
         /// <summary>
         /// Summe der Cents die zurückgegeben werden
         /// </summary>
-        public int ReturnCents => -1;
+        public int ReturnCents => ReturnCoinValues.Split(';').Select(s => int.Parse(s)).Sum();
 
 
         public int ProductId { get; set; }
@@ -46,7 +50,7 @@ namespace CoffeeSlotMachine.Core.Entities
         /// Kann der Automat mangels Kleingeld nicht
         /// mehr herausgeben, wird der Rest als Spende verbucht
         /// </summary>
-        public int DonationCents => -1;
+        public int DonationCents => ThrownInCents - Product.PriceInCents - ReturnCents;
 
         /// <summary>
         /// Münze wird eingenommen.
@@ -55,7 +59,12 @@ namespace CoffeeSlotMachine.Core.Entities
         /// <returns>isFinished ist true, wenn der Produktpreis zumindest erreicht wurde</returns>
         public bool InsertCoin(int coinValue)
         {
-            throw new NotImplementedException();
+            if (coinValue == 0) return false;
+            if (ThrownInCents < Product.PriceInCents)
+            { 
+                 AddIntToNumbersText(coinValue);
+            }
+            return ThrownInCents >= Product.PriceInCents;
         }
 
         /// <summary>
@@ -66,7 +75,49 @@ namespace CoffeeSlotMachine.Core.Entities
         /// <param name="coins">Aktueller Zustand des Münzdepots</param>
         public void FinishPayment(IEnumerable<Coin> coins)
         {
-            throw new NotImplementedException();
+            var insertedCoins = ThrownInCoinValues.Split(';')
+                .GroupBy(coin => coin)
+                .Select(co => new
+                {
+                    CoinValue = int.Parse(co.Key),
+                    Amount = co.Count()
+                }).OrderBy(co => co.CoinValue);
+
+            foreach (var item in insertedCoins)
+            {
+                coins.Single(coin => coin.CoinValue == item.CoinValue)
+                    .Amount += item.Amount;
+            }
+            // retourGeld
+            int returnCents = ThrownInCents - Product.PriceInCents;
+            if (returnCents == 0) ReturnCoinValues = "0";
+            else
+            {
+                foreach (var coin in coins)
+                {
+                    while (returnCents > 0 && coin.CoinValue <= returnCents && coin.Amount > 0)
+                    {
+                        if (!string.IsNullOrEmpty(ReturnCoinValues)) ReturnCoinValues = $"{ReturnCoinValues};{coin.CoinValue}";
+                        else ReturnCoinValues = $"{coin.CoinValue}";
+                        returnCents -= coin.CoinValue;
+                        coin.Amount--;
+                    }
+                }
+            }
         }
+
+
+        public void AddIntToNumbersText(int coinValue)
+        {
+            if(string.IsNullOrEmpty(ThrownInCoinValues))
+            {
+                ThrownInCoinValues += $"{coinValue}";
+            }
+            else
+            {
+                ThrownInCoinValues += $";{coinValue}";
+            }
+        }
+
     }
 }
