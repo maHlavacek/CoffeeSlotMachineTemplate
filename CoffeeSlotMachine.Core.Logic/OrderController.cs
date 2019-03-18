@@ -34,7 +34,7 @@ namespace CoffeeSlotMachine.Core.Logic
         /// <returns></returns>
         public IEnumerable<Product> GetProducts()
         {
-            return _dbContext.Products.OrderBy(n => n.Name);
+            return _productRepository.GetAllProducts().OrderBy(n => n.Name);
         }
 
         /// <summary>
@@ -58,7 +58,7 @@ namespace CoffeeSlotMachine.Core.Logic
             {
                 order.FinishPayment(GetCoinDepot());
                 order.Product.Orders.Add(order);
-                //_dbContext.Add(order);
+               
                 _dbContext.SaveChanges();
                 return true;
             }
@@ -71,7 +71,7 @@ namespace CoffeeSlotMachine.Core.Logic
         /// <returns></returns>
         public IEnumerable<Coin> GetCoinDepot()
         {
-            return _dbContext.Coins.OrderByDescending(c => c.CoinValue);
+            return _coinRepository.GetAllCoins().OrderByDescending(c => c.CoinValue);
         }
 
 
@@ -103,7 +103,7 @@ namespace CoffeeSlotMachine.Core.Logic
         /// <returns></returns>
         public IEnumerable<Order> GetAllOrdersWithProduct()
         {
-            return _dbContext.Orders;
+            return _orderRepository.GetAllWithProduct();
         }
 
         /// <summary>

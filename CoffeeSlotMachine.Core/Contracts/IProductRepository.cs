@@ -5,5 +5,6 @@ namespace CoffeeSlotMachine.Core.Contracts
 {
     public interface IProductRepository
     {
+        IEnumerable<Product> GetAllProducts();
     }
 }

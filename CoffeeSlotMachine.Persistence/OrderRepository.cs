@@ -18,7 +18,7 @@ namespace CoffeeSlotMachine.Persistence
 
         public IEnumerable<Order> GetAllWithProduct()
         {
-            throw new NotImplementedException();
+            return _dbContext.Orders;
         }
 
     }

@@ -255,7 +255,7 @@ namespace CoffeeSlotMachine.ControllerTest
                 isFinished = controller.InsertCoin(order, 100);
                 Assert.AreEqual(true, isFinished, "100 Cent genügen");
                 Assert.AreEqual(100, order.ThrownInCents, "Einwurf stimmt nicht");
-               // Assert.AreEqual(100 - product.PriceInCents, order.ReturnCents);
+                Assert.AreEqual(100 - product.PriceInCents - order.DonationCents, order.ReturnCents);
                 Assert.AreEqual(45, order.DonationCents);
                 Assert.AreEqual("5", order.ReturnCoinValues);
 
